@@ -3,11 +3,16 @@ import logging
 import socket
 import sys
 from datetime import datetime
+
 try:
     import json
 except ImportError:
     import simplejson as json
-
+    
+try:
+    from bson.json_util as json
+except ImportError:
+    pass
 
 class LogstashFormatterBase(logging.Formatter):
 
