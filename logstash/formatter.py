@@ -10,7 +10,7 @@ except ImportError:
     import simplejson as json
     
 try:
-    from bson.json_util as json
+    from bson import json_util as json
 except ImportError:
     pass
 
