@@ -1,5 +1,8 @@
 import ssl
 from logging.handlers import SocketHandler
+
+from typing import Optional, List
+
 from logstash import formatter
 
 
@@ -20,7 +23,19 @@ class TCPLogstashHandler(SocketHandler, object):
     :param ca_certs: The path to the file containing recognised CA certificates. System wide CA certs are used if omitted.
     """
 
-    def __init__(self, host, port=5959, message_type='logstash', tags=None, fqdn=False, version=0, ssl=True, ssl_verify=True, keyfile=None, certfile=None, ca_certs=None):
+    def __init__(
+            self,
+            host: str,
+            port: int = 5959,
+            message_type: str = 'logstash',
+            tags: List[str] = None,
+            fqdn: bool = False,
+            ssl: bool = True,
+            ssl_verify: bool = True,
+            keyfile: Optional[str] = None,
+            certfile: Optional[str] = None,
+            ca_certs: Optional[str] = None
+    ) -> None:
         super(TCPLogstashHandler, self).__init__(host, port)
 
         self.ssl = ssl
@@ -29,16 +44,12 @@ class TCPLogstashHandler(SocketHandler, object):
         self.certfile = certfile
         self.ca_certs = ca_certs
 
-        if version == 1:
-            self.formatter = formatter.LogstashFormatterVersion1(message_type, tags, fqdn)
-        else:
-            self.formatter = formatter.LogstashFormatterVersion0(message_type, tags, fqdn)
+        self.formatter = formatter.LogstashFormatter(message_type, tags, fqdn)
 
-    def makePickle(self, record):
+    def makePickle(self, record: str):
         return self.formatter.format(record) + b'\n'
 
-
-    def makeSocket(self, timeout=1):
+    def makeSocket(self, timeout: int = 1):
         s = super(TCPLogstashHandler, self).makeSocket(timeout)
 
         if not self.ssl:

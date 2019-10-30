@@ -1,10 +1,8 @@
-import json
 try:
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urlencode
 
-from logging import Filter
 from logging.handlers import SocketHandler
 
 import pika
@@ -43,12 +41,25 @@ class AMQPLogstashHandler(SocketHandler, object):
         record.name will be passed as `logger` parameter.
     """
 
-    def __init__(self, host='localhost', port=5672, username='guest',
-                 password='guest', exchange='logstash', exchange_type='fanout',
-                 virtual_host='/', message_type='logstash', tags=None,
-                 durable=False, passive=False, version=0, extra_fields=True,
-                 fqdn=False, facility=None, exchange_routing_key=''):
-
+    def __init__(
+        self,
+        host="localhost",
+        port=5672,
+        username="guest",
+        password="guest",
+        exchange="logstash",
+        exchange_type="fanout",
+        virtual_host="/",
+        message_type="logstash",
+        tags=None,
+        durable=False,
+        passive=False,
+        version=0,
+        extra_fields=True,
+        fqdn=False,
+        facility=None,
+        exchange_routing_key="",
+    ):
 
         # AMQP parameters
         self.host = host
@@ -66,8 +77,11 @@ class AMQPLogstashHandler(SocketHandler, object):
 
         # Extract Logstash paramaters
         self.tags = tags or []
-        fn = formatter.LogstashFormatterVersion1 if version == 1 \
+        fn = (
+            formatter.LogstashFormatterVersion1
+            if version == 1
             else formatter.LogstashFormatterVersion0
+        )
         self.formatter = fn(message_type, tags, fqdn)
 
         # Standard logging parameters
@@ -77,53 +91,64 @@ class AMQPLogstashHandler(SocketHandler, object):
 
     def makeSocket(self, **kwargs):
 
-        return PikaSocket(self.host,
-                          self.port,
-                          self.username,
-                          self.password,
-                          self.virtual_host,
-                          self.exchange,
-                          self.routing_key,
-                          self.exchange_is_durable,
-                          self.declare_exchange_passively,
-                          self.exchange_type)
+        return PikaSocket(
+            self.host,
+            self.port,
+            self.username,
+            self.password,
+            self.virtual_host,
+            self.exchange,
+            self.routing_key,
+            self.exchange_is_durable,
+            self.declare_exchange_passively,
+            self.exchange_type,
+        )
 
     def makePickle(self, record):
         return self.formatter.format(record)
 
 
 class PikaSocket(object):
-
-    def __init__(self, host, port, username, password, virtual_host, exchange,
-                routing_key, durable, passive, exchange_type):
+    def __init__(
+        self,
+        host,
+        port,
+        username,
+        password,
+        virtual_host,
+        exchange,
+        routing_key,
+        durable,
+        passive,
+        exchange_type,
+    ):
 
         # create connection parameters
         credentials = pika.PlainCredentials(username, password)
-        parameters = pika.ConnectionParameters(host, port, virtual_host,
-                                               credentials)
+        parameters = pika.ConnectionParameters(host, port, virtual_host, credentials)
 
         # create connection & channel
         self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
 
         # create an exchange, if needed
-        self.channel.exchange_declare(exchange=exchange,
-                                      exchange_type=exchange_type,
-                                      passive=passive,
-                                      durable=durable)
+        self.channel.exchange_declare(
+            exchange=exchange,
+            exchange_type=exchange_type,
+            passive=passive,
+            durable=durable,
+        )
 
         # needed when publishing
         self.spec = pika.spec.BasicProperties(delivery_mode=2)
         self.routing_key = routing_key
         self.exchange = exchange
 
-
     def sendall(self, data):
 
-        self.channel.basic_publish(self.exchange,
-                                   self.routing_key,
-                                   data,
-                                   properties=self.spec)
+        self.channel.basic_publish(
+            self.exchange, self.routing_key, data, properties=self.spec
+        )
 
     def close(self):
         try:

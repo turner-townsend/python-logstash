@@ -2,12 +2,12 @@ from distutils.core import setup
 setup(
     name='python-logstash',
     packages=['logstash'],
-    version='0.4.6',
+    version='0.4.7',
     description='Python logging handler for Logstash.',
     long_description=open('README.rst').read(),
-    author='Volodymyr Klochan',
-    author_email='vklochan@gmail.com',
-    url='https://github.com/vklochan/python-logstash',
+    author='Chris Gearing/Robert Young',
+    author_email='chris.gearing@turntown.com/robert.young@turntown.com',
+    url='https://github.com/turner-townsend/python-logstash',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
